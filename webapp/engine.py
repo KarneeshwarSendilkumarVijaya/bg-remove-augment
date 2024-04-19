@@ -81,7 +81,7 @@ def blur_bg(image, threshold, resize=False):
         return result_img
 
 
-def _remove(image):
+def create_mask(image):
     sample = preprocess(np.array(image))
     with torch.no_grad():
         inputs_test = torch.FloatTensor(sample["image"].unsqueeze(0).float())
@@ -90,16 +90,14 @@ def _remove(image):
         predict = norm_pred(pred).squeeze().cpu().detach().numpy()
         img_out = Image.fromarray(predict * 255).convert("RGB")
         image = image.resize((img_out.size), resample=Image.BILINEAR)
-        empty_img = Image.new("RGBA", (image.size), 0)
-        img_out = Image.composite(image, empty_img, img_out.convert("L"))
 
-    return img_out
+    return image
 
 
 def remove_bg_mult(image):
     img_out = image.copy()
     for _ in range(4):
-        img_out = _remove(img_out)
+        img_out = create_mask(img_out)
 
     img_out = img_out.resize((image.size), resample=Image.BILINEAR)
     empty_img = Image.new("RGBA", (image.size), 0)
