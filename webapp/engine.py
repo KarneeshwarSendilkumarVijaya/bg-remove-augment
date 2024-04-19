@@ -1,10 +1,12 @@
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import torch
+from scipy.ndimage import gaussian_filter
 from torchvision import transforms
 from u2net import utils, model
+import cv2
 
-model_path = './ckpt/u2net.pth'
+model_path = './ckpt/u2net_bce_itr_7800_train_0.048451_tar_0.002682.pth'
 model_pred = model.U2NET(3, 1)
 model_pred.load_state_dict(torch.load(model_path, map_location="cpu"))
 model_pred.eval()
@@ -54,6 +56,29 @@ def remove_bg(image, resize=False):
         del d1, pred, predict, inputs_test, sample
 
         return img_out
+
+
+def blur_bg(image, threshold, resize=False):
+    sample = preprocess(np.array(image))
+
+    with torch.no_grad():
+        inputs_test = torch.FloatTensor(sample["image"].unsqueeze(0).float())
+
+        d1, _, _, _, _, _, _ = model_pred(inputs_test)
+        pred = d1[:, 0, :, :]
+        predict = norm_pred(pred).squeeze().cpu().detach().numpy()
+        img_out = Image.fromarray(predict * 255).convert("RGB")
+        img_out = img_out.resize((image.size), resample=Image.BILINEAR)
+        empty_img = Image.new("RGBA", (image.size), 0)
+        img_out = Image.composite(image, empty_img, img_out.convert("L"))
+
+        img_out = img_out.point(lambda p: 255 - p)
+        blurred_img = image.filter(ImageFilter.GaussianBlur(threshold))
+        result_img = Image.composite(blurred_img, image, img_out)
+
+        del d1, pred, predict, inputs_test, sample
+
+        return result_img
 
 
 def _remove(image):
