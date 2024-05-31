@@ -12,9 +12,9 @@ OUTPUT_FOLDER = "images-output"
 input_type = '.jpg'
 output_type = '.png'
 
-lot_image_file = "/Users/ksvijaya/Library/CloudStorage/OneDrive-Copart,Inc/Documents/Repository/bg-remove-augment/blu_car_lot_image.csv"
+lot_image_file = "../blu_car_lot_image.csv"
 
-input_path = "/Users/ksvijaya/Library/CloudStorage/OneDrive-Copart,Inc/Documents/Repository/bg-remove-augment/webapp/images-input/"
+input_path = "../webapp/images-input/"
 
 
 def do_processing(row):
@@ -87,5 +87,6 @@ for file in os.listdir(input_path):
 
 
 # sample = pd.read_csv(lot_image_file)
-
+# sample = sample.head(30)
+#
 # sample.apply(lambda row: do_processing(row.to_dict()), axis=1)
